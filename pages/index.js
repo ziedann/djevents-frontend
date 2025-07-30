@@ -22,8 +22,13 @@ export default function HomePage({ events }) {
 
 // at build time
 export async function getStaticProps() {
-  const res = await fetch(`${API_URL}/events?_sort=date:ASC&_limit=3`);
-  const events = await res.json();
+  // Use local data during build time
+  const data = require('./api/events/data.json');
+  // Sort events by date and take first 3
+  const events = data.events
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .slice(0, 3);
+  
   return {
     props: { events },
     revalidate: 1,
