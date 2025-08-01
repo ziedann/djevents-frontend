@@ -6,11 +6,16 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { parseCookies } from "@/helpers/index";
 import Layout from "@/components/Layout";
+import Modal from "@/components/Modal";
+import ImageUpload from "@/components/ImageUpload";
 import { API_URL } from "@/config/index";
 import styles from "@/styles/Form.module.css";
 
 export default function AddEventPage({ token }) {
   const router = useRouter();
+  const [showModal, setShowModal] = useState(false);
+  const [eventId, setEventId] = useState(null);
+  const [eventSlug, setEventSlug] = useState(null);
   const [values, setValues] = useState({
     name: "",
     performers: "",
@@ -47,7 +52,10 @@ export default function AddEventPage({ token }) {
       toast.error("Something went wrong");
     } else {
       const createdEvent = await res.json();
-      router.push(`/events/${createdEvent.slug}`);
+      // Show modal for image upload
+      setShowModal(true);
+      setEventId(createdEvent.id);
+      setEventSlug(createdEvent.slug);
     }
   };
 
@@ -139,6 +147,17 @@ export default function AddEventPage({ token }) {
         </div>
         <input type="submit" value="Add Event" className="btn" />
       </form>
+
+      <Modal show={showModal} onClose={() => setShowModal(false)}>
+        <ImageUpload 
+          eventId={eventId} 
+          imageUploaded={() => {
+            setShowModal(false)
+            router.push(`/events/${eventSlug}`)
+          }}
+          token={token}
+        />
+      </Modal>
     </Layout>
   );
 }

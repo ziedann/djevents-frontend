@@ -45,17 +45,48 @@ export default function DashboardPage({ events, token }) {
 
 export async function getServerSideProps({ req }) {
   const { token } = parseCookies(req);
-  const res = await fetch(`${API_URL}/events/me`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  const events = await res.json();
-  return {
-    props: {
-      events,
-      token,
-    },
-  };
+
+  if (!token) {
+    return {
+      redirect: {
+        destination: '/account/login',
+        permanent: false,
+      },
+    }
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/events/me`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      return {
+        props: {
+          events: [],
+          token,
+        },
+      }
+    }
+
+    const events = await res.json();
+    
+    return {
+      props: {
+        events: Array.isArray(events) ? events : [],
+        token,
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    return {
+      props: {
+        events: [],
+        token,
+      },
+    };
+  }
 }

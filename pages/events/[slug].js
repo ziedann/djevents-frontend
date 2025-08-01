@@ -17,10 +17,14 @@ export default function EventPage({ singleEvent }) {
         {singleEvent.image && (
           <div className={styles.image}>
             <Image
-              src={singleEvent.image.formats.medium.url}
+              src={
+                `${API_URL}${singleEvent.image.formats?.medium?.url}` ||
+                `${API_URL}${singleEvent.image.formats?.thumbnail?.url}` ||
+                `${API_URL}${singleEvent.image.url}`
+              }
               width={960}
               height={600}
-              alt=""
+              alt={singleEvent.name}
             />
           </div>
         )}
@@ -62,11 +66,25 @@ export default function EventPage({ singleEvent }) {
 
 // on every request
 export async function getServerSideProps({ query: { slug } }) {
-  const res = await fetch(`${API_URL}/events?slug=${slug}`);
-  const events = await res.json();
-  return {
-    props: {
-      singleEvent: events[0],
-    },
-  };
+  try {
+    const res = await fetch(`${API_URL}/events?slug=${slug}`);
+    const events = await res.json();
+
+    if (!events || events.length === 0) {
+      return {
+        notFound: true
+      }
+    }
+
+    return {
+      props: {
+        singleEvent: events[0] || null,
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching event:', error);
+    return {
+      notFound: true
+    }
+  }
 }
